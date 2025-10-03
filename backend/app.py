@@ -164,10 +164,14 @@ def generate_child():
         return jsonify({"images": images})
 
     except Exception as e:
-        #print("Erreur :", str(e))
-        #return jsonify({"error": "Erreur lors du traitement IA"}), 500
+        # Log complet côté serveur  ( en local )
+        print("Erreur :", str(e))
         import traceback
         traceback.print_exc()  # 👈 pour afficher toute la pile d'erreur
+
+        # Log complet côté serveur  ( en dev sur Render )
+        logging.error("Erreur /generate: %s\n%s", str(e), traceback.format_exc())
+        # Message clair côté client
         return jsonify({"error": str(e)}), 500  # 👈 utile pour debug
 
 # optionnel mais pratique pour Render
