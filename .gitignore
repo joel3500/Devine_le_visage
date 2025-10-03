@@ -1,5 +1,6 @@
-# 🛑 Fichiers sensibles
+# 🛑 Fichiers sensibles / secret
 .env
+backend/.env
 
 # 📄 Fichiers docs (pas nécessaires sur GitHub si temporaires)
 README.md
@@ -9,6 +10,7 @@ structure_du_projet.txt
 .venv/
 venv/
 __pycache__/
+*.pyc
 
 # 🖼️ Fichiers générés ou images locales
 *.jpg
@@ -17,7 +19,14 @@ __pycache__/
 *.webp
 
 # 🧪 Fichiers de test auto
-test_generate.py
+backend/test_generate.py
+frontend/archives/
 
-# 💻 Config VSCode (optionnel)
+# 💻 Config VSCode (optionnel) / # OS / IDE
+.DS_Store
+Thumbs.db
 .vscode/
+
+# Cache/Build
+dist/
+build/
