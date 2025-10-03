@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Générateur d’Enfant</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f7f7f7;
+      text-align: center;
+    }
+
+    .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .upload-section {
+      width: 20%;
+      min-width: 150px;
+    }
+
+    .upload-section img {
+      width: 100%;
+      height: auto;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: 2px solid #ccc;
+    }
+
+    .grid {
+      width: 55%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .grid img {
+      width: 100%;
+      height: auto;
+      border-radius: 10px;
+      border: 2px dashed #999;
+    }
+
+    .buttons {
+      margin-top: 20px;
+    }
+
+    .buttons button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 0 10px;
+      cursor: pointer;
+    }
+
+    input[type="file"] {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>À quoi ressemblerait leur enfant ?</h1>
+
+  <div class="container">
+    <!-- Section père -->
+    <div class="upload-section">
+      <label><strong>Photo du père</strong></label><br />
+      <input type="file" accept="image/*" id="fatherInput" />
+      <img id="fatherPreview" src="" alt="Aperçu père" />
+    </div>
+
+    <!-- Grille des enfants -->
+    <div class="grid" id="childGrid">
+      <!-- Les images générées viendront ici -->
+      <img src="" alt="Enfant 1" />
+      <img src="" alt="Enfant 2" />
+      <img src="" alt="Enfant 3" />
+      <img src="" alt="Enfant 4" />
+      <img src="" alt="Enfant 5" />
+      <img src="" alt="Enfant 6" />
+      <img src="" alt="Enfant 7" />
+      <img src="" alt="Enfant 8" />
+      <img src="" alt="Enfant 9" />
+      <img src="" alt="Enfant 10" />
+      
+    </div>
+
+    <!-- Section mère -->
+    <div class="upload-section">
+      <label><strong>Photo de la mère</strong></label><br />
+      <input type="file" accept="image/*" id="motherInput" />
+      <img id="motherPreview" src="" alt="Aperçu mère" />
+    </div>
+  </div>
+
+  <!-- Boutons -->
+  <div class="buttons">
+    <button onclick="generateChild('boy')">Je veux voir un garçon</button>
+    <button onclick="generateChild('girl')">Je veux voir une fille</button>
+  </div>
+
+  <!-- Script -->
+  <script>
+    // Prévisualisation des images uploadées
+    document.getElementById("fatherInput").addEventListener("change", function (e) {
+      const file = e.target.files[0];
+      if (file) {
+        document.getElementById("fatherPreview").src = URL.createObjectURL(file);
+      }
+    });
+
+    document.getElementById("motherInput").addEventListener("change", function (e) {
+      const file = e.target.files[0];
+      if (file) {
+        document.getElementById("motherPreview").src = URL.createObjectURL(file);
+      }
+    });
+
+    // Fonction simulée pour générer des enfants
+    function generateChild(gender) {
+      alert("Simulation : génération d’un " + (gender === "boy" ? "garçon" : "fille"));
+      // Tu peux ici appeler ton back-end avec fetch()
+      // Et mettre à jour les images dans .grid
+    }
+  </script>
+
+</body>
+</html>

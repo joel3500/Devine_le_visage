@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: devine-le-visage-backend
+    runtime: python
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python app.py"

@@ -1,0 +1,23 @@
+# 🛑 Fichiers sensibles
+.env
+
+# 📄 Fichiers docs (pas nécessaires sur GitHub si temporaires)
+README.md
+structure_du_projet.txt
+
+# 🐍 Environnement virtuel Python
+.venv/
+venv/
+__pycache__/
+
+# 🖼️ Fichiers générés ou images locales
+*.jpg
+*.jpeg
+*.png
+*.webp
+
+# 🧪 Fichiers de test auto
+test_generate.py
+
+# 💻 Config VSCode (optionnel)
+.vscode/

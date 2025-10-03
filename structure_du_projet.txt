@@ -1,0 +1,15 @@
+
+[Utilisateur] ⟷ [GitHub Pages (Frontend)] ⟷ [Render (Flask API)]
+
+Devine_le_visage/
+├── frontend/
+│   └── index.html                ← Page web statique (GitHub Pages)
+│
+├── backend/
+│   ├── main.py                   ← Ton script de test (optionnel)
+│   ├── app.py                    ← Serveur Flask (pour Render)
+│   ├── requirements.txt
+│   ├── .env.example              ← Exemple de fichier d’environnement
+│   └── render.yaml               ← Config auto pour Render
+│
+├── README.md                     ← Explication du projet
