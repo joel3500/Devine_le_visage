@@ -1,186 +1,230 @@
 import os
-import uuid
-from flask import Flask, request, jsonify
-from werkzeug.utils import secure_filename
-from dotenv import load_dotenv
-from openai import OpenAI
-import cloudinary
-import cloudinary.uploader
+import io
+import base64
+import logging
+import traceback
+from pathlib import Path
+from typing import List
 
-# ========== upload_to_cloudinary (Librairie permettant la signature exacte ) ==========================
-
-import hashlib
-import hmac
-import time
-from urllib.parse import urlencode
-
+from flask import Flask, request, jsonify, send_from_directory, abort
 from flask_cors import CORS
 
-# ========== Chargement des variables d'environnement ==========
+# --- 1) dotenv (local uniquement, inoffensif en prod) ---
+try:
+    from dotenv import load_dotenv
+    load_dotenv()  # charge backend/.env quand tu lances python app.py
+except Exception:
+    pass
 
-load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# --- 2) OpenAI ---
+try:
+    from openai import OpenAI
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
+except Exception:
+    client = None
+
+# --- 3) Cloudinary ---
+import cloudinary
+import cloudinary.uploader as cldu
 
 cloudinary.config(
-    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
-    api_key=os.getenv("CLOUDINARY_API_KEY"),
-    api_secret=os.getenv("CLOUDINARY_API_SECRET"),
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME", ""),
+    api_key=os.getenv("CLOUDINARY_API_KEY", ""),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET", ""),
     secure=True
 )
 
-# ========== Config Flask ==========
-app = Flask(__name__)
+# --- Répertoires front (pour servir l'UI en local si tu veux) ---
+BASE_DIR = Path(__file__).resolve().parent            # .../backend
+FRONT_DIR = (BASE_DIR / ".." / "frontend").resolve()  # .../frontend
 
-# --- CORS (origines autorisées) ---
-# Lis une variable d'env optionnelle FRONTEND_ORIGINS pour autoriser ton frontend en prod
-# Valeur par défaut = local dev ports 5173
+# --- Switchs d'environnement ---
+SERVE_FRONT = os.getenv("SERVE_FRONT", "false").lower() == "true"   # local: true / Render: false
+DEBUG_MODE  = os.getenv("DEBUG", "false").lower() == "true"         # local: true / Render: false
+
+OPENAI_IMAGE_SIZE = os.getenv("OPENAI_IMAGE_SIZE", "1024x1024")  # '1024x1024' | '1024x1536' | '1536x1024' | 'auto'
+OPENAI_IMAGE_COUNT = int(os.getenv("OPENAI_IMAGE_COUNT", "10"))
+
+# --- Création Flask ---
+if SERVE_FRONT:
+    app = Flask(__name__, static_folder=str(FRONT_DIR), static_url_path="/front")
+else:
+    app = Flask(__name__)
+
+# --- Debug & logs ---
+app.config["DEBUG"] = DEBUG_MODE
+app.config["PROPAGATE_EXCEPTIONS"] = DEBUG_MODE
+logging.basicConfig(level=logging.DEBUG if DEBUG_MODE else logging.INFO)
+
+# --- CORS autorisés (GitHub Pages + local) ---
 allowed_origins = os.getenv(
     "FRONTEND_ORIGINS",
-    "http://127.0.0.1:5173, http://localhost:5173"
+    "http://127.0.0.1:5173,http://localhost:5173,https://joel3500.github.io"
 ).split(",")
-
-# Nettoyage des espaces fortsuitifs
 allowed_origins = [o.strip() for o in allowed_origins if o.strip()]
+CORS(app, resources={r"/generate": {"origins": allowed_origins}})
 
-# Autorise CORS uniquement sur l'endpoint /generate
-CORS(
-    app,
-    resources={r"/generate": {"origins": allowed_origins}},
-    supports_credentials=False
-)
+# --- Taille maximale des uploads (ex: 10 Mo) ---
+app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024
 
 
-FRONTEND_ORIGINS='https://joel3500.github.io, http://127.0.0.1:5173, http://localhost:5173'
-# FRONTEND_ORIGINS='https://joel3500.github.io/Devine_le_visage/index, http://127.0.0.1:5173, http://localhost:5173'
+# =========================================================
+# Helpers
+# =========================================================
 
-ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png'}
+def _ensure_keys():
+    missing = []
+    if not OPENAI_API_KEY:
+        missing.append("OPENAI_API_KEY")
+    if not cloudinary.config().cloud_name:
+        missing.append("CLOUDINARY_CLOUD_NAME")
+    if not cloudinary.config().api_key:
+        missing.append("CLOUDINARY_API_KEY")
+    if not cloudinary.config().api_secret:
+        missing.append("CLOUDINARY_API_SECRET")
+    if missing:
+        raise RuntimeError(f"Variables d'environnement manquantes: {', '.join(missing)}")
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-# ========== Fonctions IA ==========
-
-def upload_to_cloudinary(file, public_id):
-    timestamp = int(time.time())
-    folder = "visages_parents"
-    params = {
-        "folder": folder,
-        "overwrite": "1",
-        "public_id": public_id,
-        "timestamp": timestamp,
-        "unique_filename": "0",
-        "use_filename": "1"
-    }
-
-    # Étape critique : l’ordre doit être alphabétique par clé
-    sorted_params = dict(sorted(params.items()))
-    to_sign = urlencode(sorted_params, doseq=True)
-    to_sign = to_sign.replace('%2C', ',')  # Cloudinary veut des virgules, pas %2C
-    to_sign = to_sign.replace('+', '%20')  # Facultatif
-
-    # Supprimer tous les encodages URL non supportés (parfois nécessaire)
-    to_sign = to_sign.replace('%3A', ':')
-
-    signature = hmac.new(
-        os.environ["CLOUDINARY_API_SECRET"].encode("utf-8"),
-        msg=to_sign.encode("utf-8"),
-        digestmod=hashlib.sha1
-    ).hexdigest()
-
-    # Ajouter la signature et l’API key
-    upload_params = dict(sorted_params)
-    upload_params["signature"] = signature
-    upload_params["api_key"] = os.environ["CLOUDINARY_API_KEY"]
-
-    result = cloudinary.uploader.upload(
-        file,
-        **upload_params
+def _upload_to_cloudinary_from_bytes(image_bytes: bytes, public_id_prefix: str = "devine"):
+    """Upload un buffer d'image à Cloudinary et retourne l'URL sécurisée."""
+    resp = cldu.upload(
+        io.BytesIO(image_bytes),
+        folder="devine_le_visage",
+        public_id=None,
+        overwrite=True,
+        resource_type="image"
     )
+    return resp.get("secure_url")
 
-    return result["secure_url"]
+def _openai_generate_images(prompt: str, n: int = 10, size: str = "512x512") -> List[bytes]:
+    """
+    Génère N images (bytes) via OpenAI gpt-image-1.
+    NB: l'API renvoie du base64 ; on boucle pour N résultats.
+    """
+    if client is None:
+        raise RuntimeError("Client OpenAI non initialisé (clé absente ?)")
 
-def get_parent_traits(image_url, role):
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {
-                "role": "system",
-                "content": "Tu es un expert en descriptions de portraits réalistes."
-            },
-            {
-                "role": "user",
-                "content": f"À partir de cette photo ({image_url}), décris brièvement les caractéristiques visibles comme les cheveux, yeux, teint et expression."
-            }
-        ],
-        max_tokens=200
-    )
-    return response.choices[0].message.content.strip()
+    results = []
+    for _ in range(n):
+        res = client.images.generate(
+            model="gpt-image-1",
+            prompt=prompt,
+            size=size
+        )
+        # res.data[0].b64_json
+        b64 = res.data[0].b64_json
+        results.append(base64.b64decode(b64))
+    return results
 
-def build_prompt(father_desc, mother_desc, gender):
-    return (
-        f"Photorealistic portrait of a 10-year-old {'boy' if gender == 'boy' else 'girl'}, "
-        f"with features inherited from a father who is {father_desc}, and a mother who is {mother_desc}. "
-        f"The child has a calm expression, a slight smile, and appears natural. Neutral background. High-quality."
-    )
+# =============================================================
+# Routes FRONT (seulement quand SERVE_FRONT=true, i.e. local)
+# =============================================================
+if SERVE_FRONT:
+    @app.get("/")
+    def index():
+        idx = FRONT_DIR / "index.html"
+        if not idx.exists():
+            abort(404, description="index.html introuvable dans /frontend")
+        return send_from_directory(FRONT_DIR, "index.html")
 
-def generate_image(prompt):
-    response = client.images.generate(
-        model="dall-e-3",
-        prompt=prompt,
-        n=1,
-        size="1024x1024"
-    )
-    return response.data[0].url
+    @app.get("/<path:path>")
+    def serve_static(path: str):
+        target = FRONT_DIR / path
+        if target.is_file():
+            return send_from_directory(FRONT_DIR, path)
+        if (FRONT_DIR / "index.html").exists():
+            return send_from_directory(FRONT_DIR, "index.html")
+        abort(404)
 
-# ========== Endpoint principal ==========
-
-@app.route("/generate", methods=["POST"])
+# =========================================================
+# API
+# =========================================================
+@app.post("/generate")
 def generate_child():
-    father_file = request.files.get("father")
-    mother_file = request.files.get("mother")
-    gender = request.form.get("gender", "girl")
-
-    if not (father_file and mother_file):
-        return jsonify({"error": "Les deux fichiers image sont requis."}), 400
-
-    if not (allowed_file(father_file.filename) and allowed_file(mother_file.filename)):
-        return jsonify({"error": "Formats autorisés : JPG, JPEG, PNG"}), 400
-
     try:
-        # Upload vers Cloudinary
-        father_url = upload_to_cloudinary(father_file, "father")
-        mother_url = upload_to_cloudinary(mother_file, "mother")
+        _ensure_keys()
 
-        # Analyse GPT-4 Vision
-        father_desc = get_parent_traits(father_url, "père")
-        mother_desc = get_parent_traits(mother_url, "mère")
+        # 1) Récup fichiers & options
+        father = request.files.get("father")
+        mother = request.files.get("mother")
+        gender = request.form.get("gender")  # "man" | "woman" | None
+        age_raw = request.form.get("age")
+        
+        # Validation de l'age
+        if age_raw is None or age_raw == "":
+            return jsonify({"error": "Âge requis (0 à 50)."}), 400
+        
+        try:
+            age = int(age_raw)
+        except ValueError:
+            return jsonify({"error": "Âge invalide (doit être un entier)."}), 400
+        
+        if age < 0 or age > 50:
+            return jsonify({"error": "Âge hors plage (0 à 50)."}), 400
 
-        # Création du prompt
-        prompt = build_prompt(father_desc, mother_desc, gender)
+        # Validation des photos du pere et de la mere
+        if not father or not mother:
+            raise ValueError("Images 'father' et 'mother' requises.")
 
-        # Génération des images
-        images = [generate_image(prompt) for _ in range(5)]
+        # 2) Uploader les photos parents dans Cloudinary (pour traçabilité / prompt)
+        up_father = cldu.upload(father, folder="devine_le_visage/parents", resource_type="image")
+        up_mother = cldu.upload(mother, folder="devine_le_visage/parents", resource_type="image")
+        father_url = up_father.get("secure_url")
+        mother_url = up_mother.get("secure_url")
 
-        return jsonify({"images": images})
+        # 3) Construire le prompt pour OpenAI
+        #    L’API images ne "fusionne" pas réellement deux visages.
+        #    On donne une consigne descriptive ; les URLs aident à contextualiser le style/traits,
+        #    mais le résultat reste une génération.
+        # Remplace entièrement ton bloc base_prompt par ceci :
+        base_prompt = (
+            "Because of a fun, recreational activity for large families who want to discover the wonders of AI, "
+            "generate a photorealistic portrait of a person whose facial features may be:\n"
+            "- either only the father's;\n"
+            "- or only the mother's;\n"
+            "- or a plausible mix of both parents;\n"
+            "- or some of the father's features combined with some of the mother's features.\n"
+            "- Maintain neutral lighting and a studio background;\n"
+            "- No text or watermark. Center the face, shoulders up;\n"
+            "- Skin color should depend on the parent's skin color;\n"
+            "- The hair shape should depend either on father's hair shape, either on mother's hair shape, either afro, either long hair; "
+            f"Parent references: {father_url} and {mother_url}. "
+        )
+
+        # Ajoute la phrase d’âge (et adapte au genre si tu veux)
+        if gender in ("boy", "garcon", "garçon", "man", "male", "m"):
+            base_prompt += f"The boy/man is about {age} years old."
+        elif gender in ("girl", "fille", "woman", "female", "w", "f"):
+            base_prompt += f"The girl/woman is about {age} years old."
+        else:
+            base_prompt += f"The person is about {age} years old."
+
+        # 4) Générer des images (N=10) avec OpenAI
+        generated_bytes = _openai_generate_images(base_prompt, n=OPENAI_IMAGE_COUNT, size=OPENAI_IMAGE_SIZE)
+
+        # 5) Uploader les résultats dans Cloudinary et retourner des URLs
+        urls: List[str] = []
+        for img_bytes in generated_bytes:
+            url = _upload_to_cloudinary_from_bytes(img_bytes, public_id_prefix="devine_child")
+            urls.append(url)
+
+        return jsonify({"images": urls}), 200
 
     except Exception as e:
-        # Log complet côté serveur  ( en local )
-        print("Erreur :", str(e))
-        import traceback
-        traceback.print_exc()  # 👈 pour afficher toute la pile d'erreur
-
-        # Log complet côté serveur  ( en dev sur Render )
         logging.error("Erreur /generate: %s\n%s", str(e), traceback.format_exc())
-        # Message clair côté client
-        return jsonify({"error": str(e)}), 500  # 👈 utile pour debug
+        if DEBUG_MODE:
+            return jsonify({"error": str(e), "trace": traceback.format_exc()}), 500
+        return jsonify({"error": "Erreur lors du traitement. Réessaie plus tard."}), 500
 
-# optionnel mais pratique pour Render
+
 @app.get("/health")
 def health():
     return {"ok": True}, 200
 
-# ========== Lancement local ==========
+
+# ================= Lancement local =================
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    #app.run(debug=True, port=port)
+    # app.run(host="127.0.0.1", port=port, debug=DEBUG_MODE)
     app.run(host="0.0.0.0", port=port, debug=False)  # En prod (sur Render)
