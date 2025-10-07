@@ -1,265 +1,351 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Générateur d’Enfant IA</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background-color: #ffffff;
-      text-align: center;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Générateur d’Enfant IA</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background-color: #ffffff;
+        text-align: center;
+      }
 
-    h1 {
-      margin-bottom: 30px;
-    }
+      h1 {
+        margin-bottom: 30px;
+      }
 
-    .container {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      flex-wrap: wrap;
-    }
-
-    .upload-section {
-      width: 20%;
-      min-width: 150px;
-    }
-
-    .upload-section img {
-      width: 100%;
-      height: auto;
-      margin-top: 10px;
-      border-radius: 8px;
-      border: 2px solid #ccc;
-    }
-
-    input[type="file"] {
-      margin-top: 10px;
-    }
-
-    .grid {
-      width: 55%;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-    }
-
-    .grid div {
-      position: relative;
-      border: 2px dashed #bbb;
-      border-radius: 8px;
-      height: 180px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    .grid img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 8px;
-    }
-
-    .grid div::before {
-      content: attr(data-label);
-      color: #555;
-      font-size: 14px;
-      position: absolute;
-      z-index: 1;
-      background: white;
-      padding: 2px 6px;
-      border-radius: 5px;
-      top: 5px;
-      left: 5px;
-      opacity: 0.8;
-    }
-
-    .buttons {
-      margin-top: 30px;
-    }
-
-    .buttons button {
-      padding: 10px 20px;
-      font-size: 16px;
-      margin: 0 10px;
-      cursor: pointer;
-      border: none;
-      background-color: #d2b48c; /* Marron clair */
-      color: #333;
-      border-radius: 5px;
-      transition: background-color 0.2s;
-    }
-
-    .buttons button:hover {
-      background-color: #c0a170;
-    }
-
-    /* Loader spinner */
-    .spinner {
-        margin: 0 auto 10px;
-        border: 6px solid #f3f3f3;
-        border-top: 6px solid #d2b48c; /* couleur marron clair */
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-
-    @media (max-width: 768px) {
       .container {
-        flex-direction: column;
-        align-items: center;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .upload-section {
+        width: 20%;
+        min-width: 150px;
+        margin-bottom: 30px;
+      }
+
+      .upload-section img {
+        width: 100%;
+        height: auto;
+        margin-top: 10px;
+        border-radius: 8px;
+        border: 2px solid #ccc;
+      }
+
+      input[type="file"] {
+        margin-top: 10px;
+        cursor: pointer;
       }
 
       .grid {
+        width: 55%;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+
+      .grid div {
+        position: relative;
+        border: 2px dashed #bbb;
+        border-radius: 8px;
+        height: 180px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+
+      .grid img {
         width: 100%;
-        grid-template-columns: repeat(2, 1fr);
+        height: 100%;
+        object-fit: cover;
+        border-radius: 8px;
       }
-    }
-  </style>
-</head>
-<body>
 
-  <h1>À quoi ressemblerait leur enfant ?</h1>
+      .grid div::before {
+        content: attr(data-label);
+        color: #555;
+        font-size: 14px;
+        position: absolute;
+        z-index: 1;
+        background: white;
+        padding: 2px 6px;
+        border-radius: 5px;
+        top: 5px;
+        left: 5px;
+        opacity: 0.8;
+      }
 
-  <div class="container">
-    <!-- Section père -->
-    <div class="upload-section">
-      <label><strong>Photo du père</strong></label><br />
-      <input type="file" accept="image/*" id="fatherInput" />
-      <img id="fatherPreview" src="" alt="Aperçu père" />
+      .buttons {
+        margin-top: 30px;
+      }
+
+      .buttons button {
+        padding: 10px 20px;
+        font-size: 16px;
+        margin: 0 10px;
+        cursor: pointer;
+        border: black;                        /* Marron foncé */
+        background-color: rgb(250, 248, 248); /* Marron clair */
+        color: #333;
+        border-radius: 5px;
+        transition: background-color 0.2s;
+      }
+
+      .buttons button:hover {
+        background-color: rgb(109, 109, 247);
+      }
+
+      /* Loader spinner */
+      .spinner {
+          margin: 0 auto 10px;
+          border: 6px solid #f3f3f3;
+          border-top: 6px solid #d2b48c; /* couleur marron clair */
+          border-radius: 50%;
+          width: 20px;
+          height: 20px;
+          animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+      }
+
+      footer {   
+          position:fixed;
+          margin-top:20px; 
+          left:10px; 
+          right:10px; 
+          bottom:10px; 
+          background:black; 
+          text-align:center; 
+          min-height:40px; 
+          color:rgba(255, 255, 255, 0.5);
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .grid {
+          width: 100%;
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <h1>À quoi ressemblerait leur enfant ?</h1>
+
+    <div class="container">
+      <!-- Section père -->
+      <div class="upload-section">
+        <label><strong>Photo du père</strong></label><br/>
+        
+        <input type="file" accept="image/*" id="fatherInput" />
+        <img id="fatherPreview" src="" alt="Aperçu père" /><br><br><br>
+
+        <div>Remarque : plus la photo sera centrée, arrière-plan uniforme, fond neutre, profil de face, .. (photo passeport) plus vous obtiendrez de meilleurs résultats.</div>
+        
+        <div><font color="blue"> Soyez un peu patient, car ça prend environ 5 min pour avoir les résultats de cette requête. 
+                                 Nous sommes en train de travailler lèa dessus pour reduire ce temps au minimum. 
+             </font>
+        </div><br><br>
+        
+      </div>
+
+      
+      <!-- Grille des enfants -->
+      <div class="grid" id="childGrid">
+        <!-- 10 emplacements avec lien téléchargeable -->
+        <div data-label="Enfant 1"><a download target="_blank"><img alt="Enfant 1" /></a></div>
+        <div data-label="Enfant 2"><a download target="_blank"><img alt="Enfant 2" /></a></div>
+        <div data-label="Enfant 3"><a download target="_blank"><img alt="Enfant 3" /></a></div>
+        <div data-label="Enfant 4"><a download target="_blank"><img alt="Enfant 4" /></a></div>
+        <div data-label="Enfant 5"><a download target="_blank"><img alt="Enfant 5" /></a></div>
+        <div data-label="Enfant 6"><a download target="_blank"><img alt="Enfant 6" /></a></div>
+        <div data-label="Enfant 7"><a download target="_blank"><img alt="Enfant 7" /></a></div>
+        <div data-label="Enfant 8"><a download target="_blank"><img alt="Enfant 8" /></a></div>
+        <div data-label="Enfant 9"><a download target="_blank"><img alt="Enfant 9" /></a></div>
+        <div data-label="Enfant 10"><a download target="_blank"><img alt="Enfant 10" /></a></div>
+      </div><br><br><br><br>
+
+      <!-- Section mère -->
+      <div class="upload-section">
+        <label><strong>Photo de la mère</strong></label><br />
+        <input type="file" accept="image/*" id="motherInput" />
+        <img id="motherPreview" src="" alt="Aperçu mère" />
+      </div><br><br><br><br><br><br><br><br>
+
+      <!-- Sélection de l'age de l'enfant -->
+      <div class="upload-section" style="width: 20%; min-width: 150px;">
+        <label for="ageSelect"><strong>Âge de l’enfant</strong></label><br />
+        <select id="ageSelect" required style="margin-top:10px; width:100%; padding:6px; border-radius:6px;">
+          <option value="">-- Sélectionnez un âge --</option>
+        </select>
+        <small style="color:#666;">Obligatoire (0 à 50 ans)</small>
+      </div>
+
     </div>
 
-    <!-- Grille des enfants -->
-    <div class="grid" id="childGrid">
-      <!-- 10 emplacements avec lien téléchargeable -->
-      <div data-label="Enfant 1"><a download target="_blank"><img alt="Enfant 1" /></a></div>
-      <div data-label="Enfant 2"><a download target="_blank"><img alt="Enfant 2" /></a></div>
-      <div data-label="Enfant 3"><a download target="_blank"><img alt="Enfant 3" /></a></div>
-      <div data-label="Enfant 4"><a download target="_blank"><img alt="Enfant 4" /></a></div>
-      <div data-label="Enfant 5"><a download target="_blank"><img alt="Enfant 5" /></a></div>
-      <div data-label="Enfant 6"><a download target="_blank"><img alt="Enfant 6" /></a></div>
-      <div data-label="Enfant 7"><a download target="_blank"><img alt="Enfant 7" /></a></div>
-      <div data-label="Enfant 8"><a download target="_blank"><img alt="Enfant 8" /></a></div>
-      <div data-label="Enfant 9"><a download target="_blank"><img alt="Enfant 9" /></a></div>
-      <div data-label="Enfant 10"><a download target="_blank"><img alt="Enfant 10" /></a></div>
+    <!-- Boutons -->
+    <div class="buttons">
+      <button id="boyBtn" onclick="generateChild('man')">Je veux voir un garçon</button>
+      <button id="girlBtn" onclick="generateChild('woman')">Je veux voir une fille</button>
     </div>
 
-    <!-- Section mère -->
-    <div class="upload-section">
-      <label><strong>Photo de la mère</strong></label><br />
-      <input type="file" accept="image/*" id="motherInput" />
-      <img id="motherPreview" src="" alt="Aperçu mère" />
-    </div>
-  </div>
+    <!-- Loader (animation de chargement "Génération en cours...") -->
+    <div id="loader" style="display:none; margin-top: 20px;">
+    <div class="spinner"></div>
+    <p>Génération en cours...</p>
+    </div><br><br><br>
 
-  <!-- Boutons -->
-  <div class="buttons">
-    <button onclick="generateChild('boy')">Je veux voir un garçon</button>
-    <button onclick="generateChild('girl')">Je veux voir une fille</button>
-  </div>
+    <script>
+        // Bascule auto LOCAL ⇄ PROD
+        const isLocal = (location.hostname === "127.0.0.1" || location.hostname === "localhost");
+        const API_BASE = isLocal
+          ? "http://127.0.0.1:5000"                           // backend local Flask
+          : "https://devine-le-visage.onrender.com";          // backend Render (remplace par ton URL Render)
+    </script>
+    
+    <!-- Script -->
+    <script>
+  // === NEW: Appel API factorisé (LOCAL ⇄ PROD grâce à API_BASE) ===
+      async function genererEnfants(formData) {
+        const res = await fetch(`${API_BASE}/generate`, { method: "POST", body: formData });
+        const raw = await res.text();
 
-  <!-- Loader (animation de chargement "Génération en cours...") -->
-  <div id="loader" style="display:none; margin-top: 20px;">
-  <div class="spinner"></div>
-  <p>Génération en cours...</p>
-  </div>
-
-  <script>
-      // Bascule auto LOCAL ⇄ PROD
-      const isLocal = (location.hostname === "127.0.0.1" || location.hostname === "localhost");
-      const API_BASE = isLocal
-        ? "http://127.0.0.1:5000"                           // backend local Flask
-        : "https://devine-le-visage.onrender.com";               // backend Render (remplace par ton URL Render)
-  </script>
-  
-  <!-- Script -->
-  <script>
-// === NEW: Appel API factorisé (LOCAL ⇄ PROD grâce à API_BASE) ===
-  async function genererEnfants(formData) {
-    const res = await fetch(`${API_BASE}/generate`, {
-      method: "POST",
-      body: formData
-    });
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(`Erreur serveur (${res.status}) : ${txt}`);
-    }
-    return res.json();
-  }
-
-
-    // Prévisualisation
-    document.getElementById("fatherInput").addEventListener("change", function (e) {
-      const file = e.target.files[0];
-      if (file) {
-        document.getElementById("fatherPreview").src = URL.createObjectURL(file);
-      }
-    });
-
-    document.getElementById("motherInput").addEventListener("change", function (e) {
-      const file = e.target.files[0];
-      if (file) {
-        document.getElementById("motherPreview").src = URL.createObjectURL(file);
-      }
-    });
-
-    // Génération enfant via Flask API
-    function generateChild(gender) {
-      const fatherInput = document.getElementById("fatherInput").files[0];
-      const motherInput = document.getElementById("motherInput").files[0];
-
-      if (!fatherInput || !motherInput) {
-        alert("Veuillez charger les deux photos.");
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append("father", fatherInput);
-      formData.append("mother", motherInput);
-      formData.append("gender", gender);
-
-      document.getElementById("loader").style.display = "block";
-
-      fetch("https://generateur-backend.onrender.com/generate", {
-        method: "POST",
-        body: formData
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.images) {
-            const grid = document.getElementById("childGrid");
-            const containers = grid.querySelectorAll("div");
-
-            data.images.forEach((url, i) => {
-              const anchor = containers[i].querySelector("a");
-              const img = anchor.querySelector("img");
-
-              anchor.href = url;
-              anchor.download = `enfant_${i + 1}.jpg`;
-              img.src = url;
-            });
+        if (!res.ok) {
+          let msg = `HTTP ${res.status}`;
+          try {
+            const data = JSON.parse(raw);
+            if (data.error) msg += ` — ${data.error}`;
+            if (isLocal && data.trace) {
+              console.error("TRACE (serveur):\n" + data.trace);
+              msg += `\n\nTRACE (console)`;
+            }
+          } catch {
+            if (isLocal) msg += ` — ${raw.slice(0, 400)}`;
           }
-          document.getElementById("loader").style.display = "none";
-        })
-        .catch(err => {
-          document.getElementById("loader").style.display = "none";
-          console.error("Erreur lors de la génération :", err);
-          alert("Erreur lors de la génération des images.");
-        });
-    }
-  </script>
+          throw new Error(msg);
+        }
 
-</body>
+        return JSON.parse(raw);
+      }
+          // Désactiver les boutons tant que tout n’est pas prêt
+          function updateActionsState() {
+            const fatherOk = !!document.getElementById("fatherInput").files[0];
+            const motherOk = !!document.getElementById("motherInput").files[0];
+            const ageOk    = document.getElementById("ageSelect").value !== "";
+            const ready    = fatherOk && motherOk && ageOk;
+
+            document.getElementById("boyBtn").disabled  = !ready;
+            document.getElementById("girlBtn").disabled = !ready;
+          }
+
+          ["fatherInput","motherInput","ageSelect"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener("change", updateActionsState);
+          });
+
+          // au chargement
+          document.addEventListener("DOMContentLoaded", updateActionsState);
+          
+          // Prévisualisation du pèere téléchargé
+          document.getElementById("fatherInput").addEventListener("change", function (e) {
+            const file = e.target.files[0];
+            if (file) {
+              document.getElementById("fatherPreview").src = URL.createObjectURL(file);
+          }
+      });
+
+      // Prévisualisation de la mèere téléchargée
+      document.getElementById("motherInput").addEventListener("change", function (e) {
+            const file = e.target.files[0];
+            if (file) {
+              document.getElementById("motherPreview").src = URL.createObjectURL(file);
+            }
+          });
+
+      // Génération enfant via Flask API
+      // Avec DOMContentLoaded, tu peux placer ce code n’importe où 
+      // après ta balise <select>, idéalement dans le bloc <script> 
+      // en bas de page, juste avant </body>, et avant ta fonction generateChild(gender) 
+      // (ou au tout début de ton script).
+      document.addEventListener("DOMContentLoaded", () => {
+          const ageSelect = document.getElementById("ageSelect");
+          if (ageSelect && ageSelect.options.length <= 1) {
+            for (let i = 0; i <= 50; i++) {
+              const opt = document.createElement("option");
+              opt.value = String(i);
+              opt.textContent = (i === 0) ? "0 (nouveau-né)" : String(i);
+              ageSelect.appendChild(opt);
+            }
+          }
+      });
+
+      function generateChild(gender) {
+        const fatherInput = document.getElementById("fatherInput").files[0];
+        const motherInput = document.getElementById("motherInput").files[0];
+        if (!fatherInput || !motherInput) {
+          alert("Veuillez charger les deux photos.");
+          return;
+        }
+
+        const ageValue = document.getElementById("ageSelect").value;
+        if (ageValue === "") {
+          alert("Veuillez sélectionner l’âge (obligatoire).");
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("father", fatherInput);
+        formData.append("mother", motherInput);
+        formData.append("gender", gender);
+        formData.append("age", ageValue);
+
+        document.getElementById("loader").style.display = "block";
+
+        genererEnfants(formData)
+        .then(data => {
+            if (data.images) {
+              const grid = document.getElementById("childGrid");
+              const containers = grid.querySelectorAll("div");
+              data.images.forEach((url, i) => {
+                const anchor = containers[i].querySelector("a");
+                const img = anchor.querySelector("img");
+                anchor.href = url;
+                anchor.download = `enfant_${i + 1}.jpg`;
+                img.src = url;
+              });
+            }
+          })
+          .catch(err => {
+            console.error("Erreur lors de la génération :", err);
+            alert("Erreur lors de la génération des images.\n" + err.message);
+          })
+          .finally(() => {
+            document.getElementById("loader").style.display = "none";
+          });
+        }
+
+    </script>
+
+  </body>
+
+  <!-- Le pied de page -->
+	<footer>
+        Projet réalisé par : RODRIGUE ILBOUDO et JOEL SANDÉ | déployé en Automne 2025 èa TITRE exclusivement RECRÉATIF pour les familles ;) 
+  </footer>
+
 </html>
