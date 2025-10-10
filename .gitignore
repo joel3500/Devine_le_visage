@@ -1,28 +1,28 @@
-# 🛑 Fichiers sensibles / secret
+#  Fichiers sensibles / secret
 .env
 backend/.env
 
-# 📄 Fichiers docs (pas nécessaires sur GitHub si temporaires)
+#  Fichiers docs (pas nécessaires sur GitHub si temporaires)
 README.md
 structure_du_projet.txt
 
-# 🐍 Environnement virtuel Python
+#  Environnement virtuel Python
 .venv/
 venv/
 __pycache__/
 *.pyc
 
-# 🖼️ Fichiers générés ou images locales
+#  Fichiers générés ou images locales
 *.jpg
 *.jpeg
 *.png
 *.webp
 
-# 🧪 Fichiers de test auto
+#  Fichiers de test auto
 backend/test_generate.py
 frontend/archives/
 
-# 💻 Config VSCode (optionnel) / # OS / IDE
+#  Config VSCode (optionnel) / # OS / IDE
 .DS_Store
 Thumbs.db
 .vscode/
